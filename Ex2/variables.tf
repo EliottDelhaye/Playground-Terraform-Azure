@@ -23,8 +23,8 @@ variable "subnet_name" {
   type        = string
 }
 
-variable "vm_name" {
-  description = "Name of the virtual machine"
+variable "load_balancer_name" {
+  description = "Name of the load balancer"
   type        = string
 }
 

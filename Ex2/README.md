@@ -91,6 +91,33 @@ The Azure CLI and Terraform are pre-installed in this dev container.
     terraform apply -var-file="dev.tfvars"
     ```
 
+## Testing the Load Balancer
+
+After successful deployment, you can test the load balancer functionality:
+
+1. **Get the Load Balancer Public IP**  
+   The public IP will be displayed in the Terraform output after deployment.
+
+2. **Test Load Distribution**  
+   Run the following command to verify that traffic is being distributed between both VMs:
+   ```bash
+   for i in {1..10}; do curl -s http://YOUR_LB_PUBLIC_IP | grep "Private IP"; done
+   ```
+   
+   Example output:
+   ```
+   <h2>Private IP: 10.0.0.4</h2>
+   <h2>Private IP: 10.0.0.5</h2>
+   <h2>Private IP: 10.0.0.4</h2>
+   <h2>Private IP: 10.0.0.5</h2>
+   ...
+   ```
+   
+   You should see responses alternating between the two VMs (10.0.0.4 and 10.0.0.5), demonstrating that the load balancer is distributing traffic using its hash-based algorithm.
+
+3. **Access the Web Application**  
+   You can also open the load balancer's public IP in a web browser to see the HTML page served by one of the VMs.
+
 ## Cleanup
 
 To remove all resources created by this exercise, run:
