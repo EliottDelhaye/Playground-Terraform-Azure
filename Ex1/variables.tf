@@ -18,6 +18,11 @@ variable "virtual_network_name" {
   type        = string
 }
 
+variable "subnet_name" {
+  description = "Name of the subnet"
+  type        = string
+}
+
 variable "vm_name" {
   description = "Name of the virtual machine"
   type        = string
@@ -28,12 +33,12 @@ variable "vm_size" {
   type        = string
 }
 
-variable "username" {
+variable "vm_username" {
   description = "Admin username for the virtual machine"
   type        = string
 }
 
-variable "password" {
+variable "vm_password" {
   description = "Admin password for the virtual machine"
   type        = string
   sensitive   = true
