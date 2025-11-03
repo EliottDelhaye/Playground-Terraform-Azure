@@ -59,7 +59,5 @@ To remove all resources created by this exercise, run:
 
 ```bash
 terraform destroy -var-file="dev.tfvars"
-```bash
-terraform destroy -var-file="dev.tfvars"
 ```
 
