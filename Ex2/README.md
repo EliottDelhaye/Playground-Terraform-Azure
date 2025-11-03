@@ -35,10 +35,10 @@ Deploy two virtual machines in Azure using Terraform, and place them behind an A
     - **Address Prefix:** `10.0.0.0/24`
 - **Virtual Machines**
     - **VM-1**
-        - **Size:** `Standard_B2s` (2 vCPUs, 4 GB RAM)
+        - **Size:** `Standard_B1ms` (1 vCPU, 2 GB RAM)
         - **Private IP:** `10.0.0.4`
     - **VM-2**
-        - **Size:** `Standard_B2s` (2 vCPUs, 4 GB RAM)
+        - **Size:** `Standard_B1ms` (1 vCPU, 2 GB RAM)
         - **Private IP:** `10.0.0.5`
 - **Load Balancer**
     - **Name:** `lb-1`
