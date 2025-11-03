@@ -2,7 +2,7 @@
 
 
 * [Exercice 1 - Single VNet with Virtual Machine](./Ex1/)
-* [Exercice 2 - Load Balancer with 2 Virtual Machines](./Ex2/)
+* [Exercice 2 - Load Balancer with Virtual Machines](./Ex2/)
 
 
 # TO LEARN
