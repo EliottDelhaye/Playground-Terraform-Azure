@@ -7,13 +7,12 @@
     },
     "ghcr.io/devcontainers/features/azure-cli:1": {}
   },
-  "postCreateCommand": "az login --use-device-code",
+  "postCreateCommand": "echo 'Terraform and Azure CLI are installed!'",
   "customizations": {
     "vscode": {
       "extensions": [
         "hashicorp.terraform",
-        "ms-azuretools.vscode-azureterraform",
-        "ms-vscode.azure-account"
+        "ms-azuretools.vscode-azureterraform"
       ]
     }
   }
