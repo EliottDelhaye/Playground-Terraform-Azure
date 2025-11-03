@@ -1,10 +1,12 @@
-# Exercice 1 - Single VNet with Virtual Machine
+# Exercise 1 - Single VNet with Virtual Machine
 
 ## Architecture
 
 Overview:
 
-![alt text](./img/architecture.png)
+<p align="center">
+    <img src="./img/architecture.png" alt="Architecture diagram" width="400"/>
+</p>
 
 
 ## Goal 
@@ -27,8 +29,9 @@ Make sure the Azure CLI and Terraform are installed in your dev container (they 
     subscription_id       = "xxxxxx"
     resource_group_name   = "rg-ex01"
     location              = "francecentral"
-    virtual_network_name  = "vnet-ex01"
-    vm_name               = "VM01"
+    virtual_network_name  = "vnet-1"
+    subnet_name           = "subnet-1"
+    vm_name               = "VM-1"
     vm_size               = "Standard_B1ms" # 1 vCPU, 2 GB RAM
     vm_username           = "MyAdminUser"
     vm_password           = "MyP@ssw0rd!"
@@ -50,9 +53,13 @@ Make sure the Azure CLI and Terraform are installed in your dev container (they 
     terraform apply -var-file="dev.tfvars"
     ```
 
-5. **Cleanup**
-    To remove all resources created by this exercise, run:
-    ```bash
-    terraform destroy -var-file="dev.tfvars"
-    ```
+## Cleanup
+
+To remove all resources created by this exercise, run:
+
+```bash
+terraform destroy -var-file="dev.tfvars"
+```bash
+terraform destroy -var-file="dev.tfvars"
+```
 
