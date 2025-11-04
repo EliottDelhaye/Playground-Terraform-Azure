@@ -193,7 +193,7 @@ resource "azurerm_network_interface_backend_address_pool_association" "be_nic2" 
 
 
 ############################
-# Cloud-init: install Nginx and create HTML page with private IP
+# Nginx with HTML page
 ############################
 locals {
   cloud_init = <<-YAML
