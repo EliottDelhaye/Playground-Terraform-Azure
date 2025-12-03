@@ -1,5 +1,5 @@
 resource "azurerm_resource_group" "rg-app-01" {
-  name     = "rg-ex03"
+  name     = "rg-ex04"
   location = var.location
 }
 
@@ -167,10 +167,10 @@ resource "azurerm_network_interface" "nic-app-i02" {
   }
 }
 
-/// Load Balancer
+// Internal Load Balancer
 
-resource "azurerm_lb" "lb-spoke" {
-  name                = "lb-spoke"
+resource "azurerm_lb" "lb-internal-spoke" {
+  name                = "lb-internal-spoke"
   location            = var.location
   resource_group_name = azurerm_resource_group.rg-app-01.name
   sku                 = "Standard"
@@ -187,40 +187,102 @@ resource "azurerm_lb" "lb-spoke" {
   ]
 }
 
-resource "azurerm_lb_backend_address_pool" "lb-backend-pool" {
-  loadbalancer_id = azurerm_lb.lb-spoke.id
+resource "azurerm_lb_backend_address_pool" "lb-internal-backend-pool" {
+  loadbalancer_id = azurerm_lb.lb-internal-spoke.id
   name            = "backend-pool"
 }
 
-resource "azurerm_network_interface_backend_address_pool_association" "nic-app-i01-association" {
+resource "azurerm_network_interface_backend_address_pool_association" "lb-internal-nic-app-i01-association" {
   network_interface_id    = azurerm_network_interface.nic-app-i01.id
   ip_configuration_name   = "ipconfig1"
-  backend_address_pool_id = azurerm_lb_backend_address_pool.lb-backend-pool.id
+  backend_address_pool_id = azurerm_lb_backend_address_pool.lb-internal-backend-pool.id
 }
 
-resource "azurerm_network_interface_backend_address_pool_association" "nic-app-i02-association" {
+resource "azurerm_network_interface_backend_address_pool_association" "lb-internal-nic-app-i02-association" {
   network_interface_id    = azurerm_network_interface.nic-app-i02.id
   ip_configuration_name   = "ipconfig1"
-  backend_address_pool_id = azurerm_lb_backend_address_pool.lb-backend-pool.id
+  backend_address_pool_id = azurerm_lb_backend_address_pool.lb-internal-backend-pool.id
 }
 
-resource "azurerm_lb_probe" "lb-probe" {
-  loadbalancer_id = azurerm_lb.lb-spoke.id
+resource "azurerm_lb_probe" "lb-internal-lb-probe" {
+  loadbalancer_id = azurerm_lb.lb-internal-spoke.id
   name            = "http-probe"
   protocol        = "Http"
   port            = 80
   request_path    = "/"
 }
 
-resource "azurerm_lb_rule" "lb-rule" {
-  loadbalancer_id                = azurerm_lb.lb-spoke.id
+resource "azurerm_lb_rule" "lb-internal-lb-rule" {
+  loadbalancer_id                = azurerm_lb.lb-internal-spoke.id
   name                           = "http-rule"
   protocol                       = "Tcp"
   frontend_port                  = 80
   backend_port                   = 80
-  frontend_ip_configuration_name = "fp-ip"
-  backend_address_pool_ids       = [azurerm_lb_backend_address_pool.lb-backend-pool.id]
-  probe_id                       = azurerm_lb_probe.lb-probe.id
+  frontend_ip_configuration_name = azurerm_lb.lb-internal-spoke.frontend_ip_configuration[0].name
+  backend_address_pool_ids       = [azurerm_lb_backend_address_pool.lb-internal-backend-pool.id]
+  probe_id                       = azurerm_lb_probe.lb-internal-lb-probe.id
+}
+
+// External Load Balancer
+
+resource "azurerm_public_ip" "lb-external-pip" {
+  name                = "lb-external-pip"
+  location            = var.location
+  resource_group_name = azurerm_resource_group.rg-app-01.name
+  allocation_method   = "Static"
+}
+
+resource "azurerm_lb" "lb-external-spoke" {
+  name                = "lb-external-spoke"
+  location            = var.location
+  resource_group_name = azurerm_resource_group.rg-app-01.name
+  sku                 = "Standard"
+
+  frontend_ip_configuration {
+    name                 = "fp-ip"
+    public_ip_address_id = azurerm_public_ip.lb-external-pip.id
+  }
+
+  depends_on = [
+    azurerm_linux_virtual_machine.vm-app-i01,
+    azurerm_linux_virtual_machine.vm-app-i02
+  ]
+}
+
+resource "azurerm_lb_backend_address_pool" "lb-external-backend-pool" {
+  loadbalancer_id = azurerm_lb.lb-external-spoke.id
+  name            = "lb-external-backend-pool"
+}
+
+resource "azurerm_network_interface_backend_address_pool_association" "lb-external-nic-app-i01-association" {
+  network_interface_id    = azurerm_network_interface.nic-app-i01.id
+  ip_configuration_name   = "ipconfig1"
+  backend_address_pool_id = azurerm_lb_backend_address_pool.lb-external-backend-pool.id
+}
+
+resource "azurerm_network_interface_backend_address_pool_association" "lb-external-nic-app-i02-association" {
+  network_interface_id    = azurerm_network_interface.nic-app-i02.id
+  ip_configuration_name   = "ipconfig1"
+  backend_address_pool_id = azurerm_lb_backend_address_pool.lb-external-backend-pool.id
+}
+
+resource "azurerm_lb_probe" "lb-external-lb-probe" {
+  loadbalancer_id = azurerm_lb.lb-external-spoke.id
+  name            = "http-probe"
+  protocol        = "Http"
+  port            = 80
+  request_path    = "/"
+}
+
+resource "azurerm_lb_rule" "lb-external-lb-rule" {
+  loadbalancer_id                = azurerm_lb.lb-external-spoke.id
+  name                           = "http-rule"
+  protocol                       = "Tcp"
+  frontend_port                  = 80
+  backend_port                   = 80
+  frontend_ip_configuration_name = azurerm_lb.lb-external-spoke.frontend_ip_configuration[0].name
+  backend_address_pool_ids       = [azurerm_lb_backend_address_pool.lb-external-backend-pool.id]
+  probe_id                       = azurerm_lb_probe.lb-external-lb-probe.id
 }
 
 // VNET peering
@@ -267,7 +329,7 @@ resource "azurerm_network_security_group" "nsg-spoke-01" {
 
 resource "azurerm_network_security_rule" "allow-internet" {
   name                        = "allow-internet"
-  priority                    = 100
+  priority                    = 110
   direction                   = "Outbound"
   access                      = "Allow"
   protocol                    = "*"
@@ -275,6 +337,20 @@ resource "azurerm_network_security_rule" "allow-internet" {
   destination_port_range      = "*"
   source_address_prefix       = "*"
   destination_address_prefix  = "Internet"
+  resource_group_name         = azurerm_resource_group.rg-app-01.name
+  network_security_group_name = azurerm_network_security_group.nsg-spoke-01.name
+}
+
+resource "azurerm_network_security_rule" "allow-http" {
+  name                        = "allow-http"
+  priority                    = 100
+  direction                   = "Inbound"
+  access                      = "Allow"
+  protocol                    = "Tcp"
+  source_port_range           = "*"
+  destination_port_range      = "80"
+  source_address_prefix       = "Internet"
+  destination_address_prefix  = "*"
   resource_group_name         = azurerm_resource_group.rg-app-01.name
   network_security_group_name = azurerm_network_security_group.nsg-spoke-01.name
 }

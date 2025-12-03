@@ -5,7 +5,12 @@ output "resource_group_name" {
 
 output "lb_internal_private_ip" {
   description = "Private IP address of the internal Load Balancer"
-  value       = azurerm_lb.lb-spoke.frontend_ip_configuration[0].private_ip_address
+  value       = azurerm_lb.lb-internal-spoke.frontend_ip_configuration[0].private_ip_address
+}
+
+output "lb_external_public_ip" {
+  description = "Public IP address of the external Load Balancer"
+  value       = azurerm_public_ip.lb-external-pip.ip_address
 }
 
 output "nat_gateway_public_ip" {
@@ -38,7 +43,12 @@ output "vm_app_i02_private_ip" {
   value       = azurerm_network_interface.nic-app-i02.private_ip_address
 }
 
-output "test_command" {
+output "test_url_external" {
+  description = "URL to test the external Load Balancer from Internet"
+  value       = "http://${azurerm_public_ip.lb-external-pip.ip_address}"
+}
+
+output "test_command_internal" {
   description = "Command to test the internal Load Balancer from vm-client"
-  value       = "curl http://${azurerm_lb.lb-spoke.frontend_ip_configuration[0].private_ip_address}"
+  value       = "curl http://${azurerm_lb.lb-internal-spoke.frontend_ip_configuration[0].private_ip_address}"
 }
