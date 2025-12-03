@@ -18,6 +18,8 @@ Subnets enable you to segment the virtual network into one or more sub-networks 
 
 Deploy an Ubuntu 24.04 LTS virtual machine (VM) in Azure using Terraform. The VM should be placed in a virtual network with proper subnet configuration.
 
+> 💡 **Need help?** The complete solution is available in [`solution/`](./solution/)
+
 - **Virtual Network**
     - **Name:** `vnet-1`
     - **Address Space:** `10.0.0.0/24`

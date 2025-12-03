@@ -27,3 +27,22 @@ output "test_url" {
   description = "URL to test the Load Balancer"
   value       = "http://${azurerm_public_ip.pip_lb.ip_address}"
 }
+
+output "summary" {
+  description = "Deployment summary and test instructions"
+  value = <<-EOT
+  
+  ✅ Deployment successful!
+  
+  Load Balancer URL: http://${azurerm_public_ip.pip_lb.ip_address}
+  
+  🧪 Test commands:
+  # Test load balancing (run multiple times to see different VMs)
+  curl http://${azurerm_public_ip.pip_lb.ip_address}
+  
+  # Or open in browser:
+  echo "Open: http://${azurerm_public_ip.pip_lb.ip_address}"
+  
+  Expected result: "VM1" or "VM2" (alternates due to load balancing)
+  EOT
+}

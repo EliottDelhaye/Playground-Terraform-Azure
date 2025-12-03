@@ -42,3 +42,26 @@ output "test_command" {
   description = "Command to test the internal Load Balancer from vm-client"
   value       = "curl http://${azurerm_lb.lb-spoke.frontend_ip_configuration[0].private_ip_address}"
 }
+
+output "summary" {
+  description = "Deployment summary and test instructions"
+  value = <<-EOT
+  
+  ✅ Deployment successful!
+  
+  Hub VNet (10.0.0.0/16)
+    └─ VM-Client: ${azurerm_network_interface.nic-client.private_ip_address}
+  
+  Spoke VNet (10.1.0.0/16)
+    ├─ VM-APP-I01: ${azurerm_network_interface.nic-app-i01.private_ip_address}
+    ├─ VM-APP-I02: ${azurerm_network_interface.nic-app-i02.private_ip_address}
+    └─ Internal LB: ${azurerm_lb.lb-spoke.frontend_ip_configuration[0].private_ip_address}
+  
+  🧪 Test from Azure Portal:
+  1. Connect to vm-client via Serial Console or Bastion
+  2. Run: curl http://${azurerm_lb.lb-spoke.frontend_ip_configuration[0].private_ip_address}
+  3. Expected: "VM1" or "VM2" (load balanced)
+  
+  💡 The internal LB is only accessible from Hub VNet via VNet peering
+  EOT
+}

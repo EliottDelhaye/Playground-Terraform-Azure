@@ -26,6 +26,7 @@ This combination of fields is referred to as a "5-tuple" (or "2-tuple" in some c
 
 Deploy two virtual machines in Azure using Terraform, and place them behind an Azure Load Balancer.
 
+> 💡 **Need help?** The complete solution is available in [`solution/`](./solution/)
 
 - **Virtual Network**
     - **Name:** `vnet-1`

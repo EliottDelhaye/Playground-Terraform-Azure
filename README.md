@@ -147,36 +147,37 @@ Deploy a complete architecture with both internal and external load balancers.
 ```
 .
 ├── Ex1/                    # Exercise 1: Basic VNet & VM
-│   ├── main.tf            # Main infrastructure code
-│   ├── variables.tf       # Variable definitions
-│   ├── output.tf          # Output values
-│   ├── provider.tf        # Provider configuration
-│   └── README.md          # Exercise documentation
+│   ├── README.md          # Exercise instructions & specifications
+│   ├── img/               # Architecture diagrams
+│   └── solution/          # Complete solution (main.tf, variables.tf, etc.)
 │
 ├── Ex2/                    # Exercise 2: Load Balancer
-│   ├── main.tf
-│   ├── variables.tf
-│   ├── output.tf
-│   ├── providers.tf
-│   └── README.md
+│   ├── README.md          # Exercise instructions & specifications
+│   ├── img/               # Architecture diagrams
+│   └── solution/          # Complete solution
 │
 ├── Ex3/                    # Exercise 3: Hub-Spoke Architecture
-│   ├── main.tf
-│   ├── variables.tf
-│   ├── output.tf
-│   ├── providers.tf
-│   └── README.md
+│   ├── README.md          # Exercise instructions & specifications
+│   ├── img/               # Architecture diagrams
+│   └── solution/          # Complete solution
 │
 ├── Ex4/                    # Exercise 4: Dual Load Balancers
-│   ├── main.tf
-│   ├── variables.tf
-│   ├── output.tf
-│   ├── providers.tf
-│   └── README.md
+│   ├── README.md          # Exercise instructions & specifications
+│   ├── img/               # Architecture diagrams
+│   └── solution/          # Complete solution
 │
 ├── .devcontainer/         # VS Code Dev Container configuration
 └── README.md              # This file
 ```
+
+### 🎯 How to Use This Repository
+
+1. **Read the exercise README** in each `ExX/` folder to understand what to build
+2. **Create your Terraform files** directly in the exercise folder (e.g., `Ex1/main.tf`)
+3. **Deploy and test** your infrastructure
+4. **Compare with the solution** in `ExX/solution/` if needed
+
+> 💡 **Learning Tip**: Try to complete each exercise on your own first before looking at the solution!
 
 ## 💡 Usage Tips
 

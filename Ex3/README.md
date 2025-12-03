@@ -40,6 +40,8 @@ ASGs enable you to group virtual machines logically and define network security 
 
 Deploy a Hub-Spoke network architecture with an internal Load Balancer in the Spoke VNet.
 
+> 💡 **Need help?** The complete solution is available in [`solution/`](./solution/)
+
 ### Hub VNet Configuration
 - **Name:** `vnet-hub`
 - **Address Space:** `10.0.0.0/16`

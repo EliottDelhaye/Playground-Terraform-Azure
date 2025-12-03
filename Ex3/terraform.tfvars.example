@@ -1,0 +1,13 @@
+# Azure Configuration
+subscription_id  = "00000000-0000-0000-0000-000000000000"
+location         = "francecentral"
+
+# Virtual Machine Credentials
+admin_username   = "azureuser"
+admin_password   = "ChangeMe123!@#"
+
+# Instructions:
+# 1. Copy this file to terraform.tfvars
+# 2. Replace subscription_id with your Azure subscription ID
+# 3. Change admin_password to a strong password (min 12 chars, uppercase, lowercase, number, special char)
+# 4. Never commit terraform.tfvars to git!

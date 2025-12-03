@@ -32,6 +32,8 @@ A single VM can be part of multiple backend pools, allowing it to serve both ext
 
 Deploy a Hub-Spoke architecture with **both internal and external Load Balancers** in the Spoke VNet, demonstrating how to expose the same backend VMs to both internet and private network traffic.
 
+> 💡 **Need help?** The complete solution is available in [`solution/`](./solution/)
+
 ### Hub VNet Configuration
 - **Name:** `vnet-hub`
 - **Address Space:** `10.0.0.0/16`
@@ -259,14 +261,3 @@ terraform destroy
 - Implement Azure Application Gateway for Layer 7 features
 - Add Azure DDoS Protection for external Load Balancer
 - Deploy multiple spoke VNets with different workloads
-
-## Production Recommendations
-
-1. **Use Azure Key Vault** for storing VM credentials
-2. **Enable Azure Monitor** and Log Analytics
-3. **Implement backup policies** for VMs
-4. **Use Managed Identities** instead of passwords where possible
-5. **Enable DDoS Protection Standard** for production external LBs
-6. **Add Web Application Firewall (WAF)** for additional security
-7. **Use Availability Zones** for higher SLA
-8. **Implement Auto-scaling** with VMSS instead of individual VMs

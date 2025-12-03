@@ -17,3 +17,19 @@ output "vm_private_ip" {
   description = "Private IP address of the virtual machine"
   value       = azurerm_network_interface.interface.private_ip_address
 }
+
+output "summary" {
+  description = "Deployment summary"
+  value = <<-EOT
+  
+  ✅ Deployment successful!
+  
+  Resource Group: ${azurerm_resource_group.rg.name}
+  Location: ${azurerm_resource_group.rg.location}
+  VM Name: ${azurerm_linux_virtual_machine.vm.name}
+  Private IP: ${azurerm_network_interface.interface.private_ip_address}
+  
+  ⚠️  No public IP - VM is only accessible within the VNet
+  💡 To connect, deploy Azure Bastion or use Serial Console in Azure Portal
+  EOT
+}

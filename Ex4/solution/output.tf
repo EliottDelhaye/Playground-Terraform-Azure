@@ -52,3 +52,31 @@ output "test_command_internal" {
   description = "Command to test the internal Load Balancer from vm-client"
   value       = "curl http://${azurerm_lb.lb-internal-spoke.frontend_ip_configuration[0].private_ip_address}"
 }
+
+output "summary" {
+  description = "Deployment summary and test instructions"
+  value = <<-EOT
+  
+  ✅ Deployment successful - Dual Load Balancer Architecture!
+  
+  Hub VNet (10.0.0.0/16)
+    └─ VM-Client: ${azurerm_network_interface.nic-client.private_ip_address}
+  
+  Spoke VNet (10.1.0.0/16)
+    ├─ VM-APP-I01: ${azurerm_network_interface.nic-app-i01.private_ip_address}
+    ├─ VM-APP-I02: ${azurerm_network_interface.nic-app-i02.private_ip_address}
+    ├─ Internal LB: ${azurerm_lb.lb-internal-spoke.frontend_ip_configuration[0].private_ip_address}
+    └─ External LB: ${azurerm_public_ip.lb-external-pip.ip_address}
+  
+  🧪 Test external Load Balancer (from your computer):
+  curl http://${azurerm_public_ip.lb-external-pip.ip_address}
+  
+  Or open in browser: http://${azurerm_public_ip.lb-external-pip.ip_address}
+  
+  🧪 Test internal Load Balancer (from vm-client):
+  1. Connect to vm-client via Serial Console or Bastion
+  2. Run: curl http://${azurerm_lb.lb-internal-spoke.frontend_ip_configuration[0].private_ip_address}
+  
+  Expected result: "VM1" or "VM2" (same VMs serve both LBs!)
+  EOT
+}
