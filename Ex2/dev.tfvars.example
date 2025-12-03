@@ -1,0 +1,22 @@
+# Azure Configuration
+subscription_id       = "00000000-0000-0000-0000-000000000000"
+resource_group_name   = "rg-ex02"
+location              = "francecentral"
+
+# Network Configuration
+virtual_network_name  = "vnet-1"
+subnet_name           = "subnet-1"
+
+# Load Balancer Configuration
+load_balancer_name    = "lb-1"
+
+# Virtual Machine Configuration
+vm_size               = "Standard_B1ms"
+vm_username           = "azureuser"
+vm_password           = "ChangeMe123!@#"
+
+# Instructions:
+# 1. Copy this file to dev.tfvars
+# 2. Replace subscription_id with your Azure subscription ID
+# 3. Change vm_password to a strong password (min 12 chars, uppercase, lowercase, number, special char)
+# 4. Never commit dev.tfvars to git!

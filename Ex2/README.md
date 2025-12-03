@@ -26,6 +26,7 @@ This combination of fields is referred to as a "5-tuple" (or "2-tuple" in some c
 
 Deploy two virtual machines in Azure using Terraform, and place them behind an Azure Load Balancer.
 
+> 💡 **Need help?** The complete solution is available in [`solution/`](./solution/)
 
 - **Virtual Network**
     - **Name:** `vnet-1`
@@ -47,81 +48,145 @@ Deploy two virtual machines in Azure using Terraform, and place them behind an A
     - **Health Probe:** TCP probe on port `80`
     - **Load Balancing Rule:** Distributes HTTP traffic (port `80`) to backend VMs
 
-Each VM should host a simple HTML page displaying its private IP address. This page must be accessible via HTTP through the Load Balancer.
-
-You will need to create the following files: `main.tf`, `variables.tf`, and `providers.tf`.
+Each VM automatically installs Nginx via cloud-init and displays its private IP address on a simple HTML page.
 
 ## Quickstart
 
 The Azure CLI and Terraform are pre-installed in this dev container.
 
-1. **Login to Azure**
-    ```bash
-    az login
-    ```
+### 1. Login to Azure
+```bash
+az login
+```
 
-2. **Set Your Variables**  
-    Create a `dev.tfvars` file in the `Ex2/` folder with the required variables (see example below):
+### 2. Set Your Variables
+Create a `dev.tfvars` file in the `Ex2/` folder with the required variables:
 
-    ```hcl
-    subscription_id       = "xxxxxx"
-    resource_group_name   = "rg-ex02"
-    location              = "francecentral"
-    virtual_network_name  = "vnet-1"
-    subnet_name           = "subnet-1"
-    vm_name               = "VM-1"
-    vm_size               = "Standard_B2s" # 2 vCPUs, 4 GB RAM
-    vm_username           = "MyAdminUser"
-    vm_password           = "MyP@ssw0rd!"
-    ```
+```hcl
+subscription_id       = "your-subscription-id"
+resource_group_name   = "rg-ex02"
+location              = "francecentral"
+virtual_network_name  = "vnet-1"
+subnet_name           = "subnet-1"
+load_balancer_name    = "lb-1"
+vm_size               = "Standard_B1ms"
+vm_username           = "azureuser"
+vm_password           = "YourSecurePassword123!"
+```
 
-3. **Deploy with Terraform**
-    Run the following commands from the `Ex2/` directory:
-    ```bash
-    # Initialize Terraform
-    terraform init
+> **Security Note**: Never commit the `dev.tfvars` file to version control. It's already listed in `.gitignore`.
 
-    # Validate the configuration files
-    terraform validate
+### 3. Initialize Terraform
+```bash
+cd Ex2/
+terraform init
+```
 
-    # Prepare the deployment plan
-    terraform plan -var-file="dev.tfvars"
+### 4. Preview the Changes
+```bash
+terraform plan -var-file="dev.tfvars"
+```
 
-    # Apply the configuration to create resources
-    terraform apply -var-file="dev.tfvars"
-    ```
+### 5. Deploy the Infrastructure
+```bash
+terraform apply -var-file="dev.tfvars"
+```
 
-## Testing the Load Balancer
+Deployment takes approximately 5-7 minutes.
 
-After successful deployment, you can test the load balancer functionality:
+### 6. Test the Load Balancer
 
-1. **Get the Load Balancer Public IP**  
-   The public IP will be displayed in the Terraform output after deployment.
+After deployment, retrieve the outputs:
 
-2. **Test Load Distribution**  
-   Run the following command to verify that traffic is being distributed between both VMs:
-   ```bash
-   for i in {1..10}; do curl -s http://YOUR_LB_PUBLIC_IP | grep "Private IP"; done
-   ```
-   
-   Example output:
-   ```
-   <h2>Private IP: 10.0.0.4</h2>
-   <h2>Private IP: 10.0.0.5</h2>
-   <h2>Private IP: 10.0.0.4</h2>
-   <h2>Private IP: 10.0.0.5</h2>
-   ...
-   ```
-   
-   You should see responses alternating between the two VMs (10.0.0.4 and 10.0.0.5), demonstrating that the load balancer is distributing traffic using its hash-based algorithm.
+```bash
+terraform output
+```
 
-3. **Access the Web Application**  
-   You can also open the load balancer's public IP in a web browser to see the HTML page served by one of the VMs.
+**Test from your local machine:**
 
-## Cleanup
+```bash
+# Get the Load Balancer public IP
+LB_IP=$(terraform output -raw load_balancer_public_ip)
 
-To remove all resources created by this exercise, run:
+# Test the Load Balancer
+curl http://$LB_IP
 
+# Test load distribution (run multiple times)
+for i in {1..10}; do curl -s http://$LB_IP | grep "Private IP"; done
+```
+
+**Expected output:**
+```html
+<h2>Private IP: 10.0.0.4</h2>
+<h2>Private IP: 10.0.0.5</h2>
+<h2>Private IP: 10.0.0.4</h2>
+<h2>Private IP: 10.0.0.5</h2>
+...
+```
+
+You should see responses alternating between both VMs, demonstrating the Load Balancer's hash-based distribution algorithm.
+
+**Or open in your browser:**
+```bash
+echo "http://$LB_IP"
+```
+
+### 7. Clean Up Resources
 ```bash
 terraform destroy -var-file="dev.tfvars"
 ```
+
+## Architecture Components
+
+| Resource Type | Name | Purpose |
+|--------------|------|------|
+| Resource Group | `rg-ex02` | Container for all resources |
+| Virtual Network | `vnet-1` | Private network (10.0.0.0/16) |
+| Subnet | `subnet-1` | VM subnet (10.0.0.0/24) |
+| Public IP | `pip-lb-1` | Load Balancer public IP |
+| Load Balancer | `lb-1` | Traffic distribution |
+| Backend Pool | `lb-be` | Contains both VMs |
+| Health Probe | `probe-80` | TCP health check on port 80 |
+| NSG | `nsg-web` | Network security rules |
+| Virtual Machines | `VM-1`, `VM-2` | Ubuntu with Nginx (Standard_B1ms) |
+
+## Key Learning Points
+
+1. **Load Balancer**: Distributes traffic across multiple VMs for high availability
+2. **Backend Pools**: Group of VMs receiving traffic from the Load Balancer
+3. **Health Probes**: Monitor VM availability and remove unhealthy instances
+4. **Load Balancing Rules**: Define how traffic is distributed (protocol, ports)
+5. **Network Security Groups**: Control inbound/outbound traffic with security rules
+6. **Cloud-init**: Automate VM configuration at deployment time
+7. **Static IPs**: Assign specific private IPs to VMs for predictability
+
+## Troubleshooting
+
+### Cannot access the Load Balancer from internet
+- Verify NSG allows inbound traffic on port 80
+- Check the public IP is allocated: `az network public-ip show`
+- Ensure both VMs are in the backend pool
+
+### Load Balancer returns no response
+- Check health probe status in Azure Portal
+- Verify Nginx is running on both VMs (use Serial Console)
+- Wait 2-3 minutes for Nginx installation to complete
+
+### Only one VM responds
+- Check backend pool association for both NICs
+- Verify both VMs pass the health probe
+- Review NSG rules for both VMs
+
+### Hash-based distribution not working
+- This is expected behavior! The Load Balancer uses a 5-tuple hash
+- From the same source IP, you may consistently hit the same VM
+- Try from different source IPs or wait for connection timeout
+
+## Next Steps
+
+Try **Exercise 3** to learn about:
+- Hub-Spoke network architecture
+- VNet Peering for multi-VNet connectivity
+- Internal Load Balancers (private traffic)
+- NAT Gateway for secure outbound connectivity
+- Application Security Groups
