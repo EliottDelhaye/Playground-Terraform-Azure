@@ -50,7 +50,6 @@ Deploy a Hub-Spoke architecture with **both internal and external Load Balancers
   - **VM-APP-I02**: Ubuntu 24.04 LTS with Nginx (displays "VM2")
   - **Internal Load Balancer**: For private traffic from Hub VNet
   - **External Load Balancer**: For public internet traffic
-  - **NAT Gateway**: Provides outbound internet connectivity for VMs
   - **Application Security Group**: Groups the application VMs
   - **Network Security Group**: Controls inbound/outbound traffic
 
@@ -70,10 +69,14 @@ Both VMs are members of both backend pools:
 - Load Balancing Rule: Port 80 TCP
 
 ### Network Security
-- **NSG Rules:**
-  - **Inbound**: Allow HTTP (port 80) from Internet
-  - **Outbound**: Allow traffic to Internet
-- **NAT Gateway** provides secure outbound connectivity with a static public IP
+- **NSG Rules (Inbound):**
+  - `allow-http` (priority 110): Allow HTTP from Internet to ASG
+  - `allow-http-from-hub` (priority 115): Allow HTTP from Hub VNet (10.0.0.0/16) to ASG
+  - `D-IN-Any` (priority 4096): Deny all other inbound traffic
+- **NSG Rules (Outbound):**
+  - `allow-internet` (priority 110): Allow ASG to Internet
+  - `D-OU-Any` (priority 4096): Deny all other outbound traffic
+- **Outbound Connectivity**: VMs use External Load Balancer's public IP for SNAT
 
 ### VNet Peering
 - Bidirectional peering between Hub and Spoke VNets
@@ -154,14 +157,6 @@ You should see alternating responses of "VM1" and "VM2".
    for i in {1..10}; do curl http://$LB_INTERNAL_IP; done
    ```
 
-#### Verify NAT Gateway
-
-From any backend VM:
-```bash
-# This returns the NAT Gateway's public IP
-curl ifconfig.me
-```
-
 ### 7. Clean Up Resources
 ```bash
 terraform destroy
@@ -179,9 +174,7 @@ terraform destroy
 | VMs (Spoke) | `vm-app-i01`, `vm-app-i02` | Web servers with Nginx |
 | Load Balancer (Internal) | `lb-internal-spoke` | Private traffic distribution |
 | Load Balancer (External) | `lb-external-spoke` | Public traffic distribution |
-| Public IP (LB) | `lb-external-pip` | External LB public IP |
-| NAT Gateway | `nat-gateway-01` | Outbound internet connectivity |
-| Public IP (NAT) | `pip-spoke-01` | NAT Gateway public IP |
+| Public IP (LB) | `pip-external-lb` | External LB public IP |
 | ASG | `asg-spoke-01` | Application security group |
 | NSG | `nsg-spoke-01` | Network security group |
 
@@ -191,8 +184,8 @@ terraform destroy
 2. **Multiple Backend Pools**: Single VM can be in multiple backend pools
 3. **Internet Exposure**: Securely exposing applications with External LB
 4. **Hub-Spoke Isolation**: Separate VNets for different workload tiers
-5. **NAT Gateway**: All outbound traffic uses a single, predictable public IP
-6. **Security Layers**: NSG + ASG for defense in depth
+5. **Application Security Groups (ASG)**: Logical grouping for NSG rules targeting VMs
+6. **Security Layers**: NSG + ASG + Deny-all rules for defense in depth
 
 ## Traffic Flow Scenarios
 
@@ -207,8 +200,8 @@ terraform destroy
 3. Response → Internal LB → VM-Client
 
 ### Scenario 3: Backend VMs Outbound
-1. VM-APP-I01/I02 → NAT Gateway
-2. NAT Gateway → Internet (using pip-spoke-01)
+1. VM-APP-I01/I02 → External Load Balancer (SNAT)
+2. LB Public IP (`pip-external-lb`) → Internet
 
 ## Troubleshooting
 
@@ -227,30 +220,32 @@ terraform destroy
 - Check backend pool health in Azure Portal
 - Verify health probes are passing
 - Ensure both VMs have Nginx running
-- Check for conflicting NSG rules (should be priority 100 for allow-http, 110 for allow-internet)
+- Check for conflicting NSG rules (priority 110 for allow-http, 115 for allow-http-from-hub)
 
 ### VMs cannot reach internet for updates
-- Verify NAT Gateway is associated with subnet-spoke-01
-- Check NAT Gateway has public IP attached
-- Verify NSG allows outbound traffic
+- Verify VMs are in the External Load Balancer's backend pool
+- Verify NSG `allow-internet` rule allows outbound traffic from ASG
+- Check VMs are associated with `asg-spoke-01`
 
 ## Security Considerations
 
 1. **Public Exposure**: Only Load Balancer has public IP, not individual VMs
-2. **Outbound Traffic**: Controlled via NAT Gateway with static IP
-3. **NSG Rules**: Granular control over allowed traffic
+2. **Deny-by-Default**: Explicit deny-all rules (D-IN-Any, D-OU-Any) at priority 4096
+3. **NSG Rules**: Granular control with ASG-based targeting
 4. **ASG**: Logical grouping simplifies security management
-5. **Credentials**: Use variables and secure storage (never hardcode)
+5. **Hub Access**: Specific rule for HTTP from Hub VNet (10.0.0.0/16)
+6. **Credentials**: Use variables and secure storage (never hardcode)
 
 ## Comparison with Exercise 3
 
 | Feature | Exercise 3 | Exercise 4 |
-|---------|-----------|-----------|
+|---------|-----------|------------|
 | Internet Access | No | Yes (External LB) |
 | Internal Access | Yes | Yes |
-| Public IPs | NAT only | NAT + External LB |
+| Public IPs | NAT Gateway | External LB only |
 | Use Case | Private applications | Public-facing apps |
-| NSG Complexity | Lower | Higher (allows HTTP inbound) |
+| NSG Complexity | Lower | Higher (HTTP inbound + deny-all rules) |
+| Outbound Method | NAT Gateway | External LB SNAT |
 
 ## Next Steps
 

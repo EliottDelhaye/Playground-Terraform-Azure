@@ -10,12 +10,7 @@ output "lb_internal_private_ip" {
 
 output "lb_external_public_ip" {
   description = "Public IP address of the external Load Balancer"
-  value       = azurerm_public_ip.lb-external-pip.ip_address
-}
-
-output "nat_gateway_public_ip" {
-  description = "Public IP address of the NAT Gateway"
-  value       = azurerm_public_ip.pip-spoke-01.ip_address
+  value       = azurerm_public_ip.pip-external-lb.ip_address
 }
 
 output "vnet_hub_id" {
@@ -45,7 +40,7 @@ output "vm_app_i02_private_ip" {
 
 output "test_url_external" {
   description = "URL to test the external Load Balancer from Internet"
-  value       = "http://${azurerm_public_ip.lb-external-pip.ip_address}"
+  value       = "http://${azurerm_public_ip.pip-external-lb.ip_address}"
 }
 
 output "test_command_internal" {
@@ -55,7 +50,7 @@ output "test_command_internal" {
 
 output "summary" {
   description = "Deployment summary and test instructions"
-  value = <<-EOT
+  value       = <<-EOT
   
   ✅ Deployment successful - Dual Load Balancer Architecture!
   
@@ -66,12 +61,12 @@ output "summary" {
     ├─ VM-APP-I01: ${azurerm_network_interface.nic-app-i01.private_ip_address}
     ├─ VM-APP-I02: ${azurerm_network_interface.nic-app-i02.private_ip_address}
     ├─ Internal LB: ${azurerm_lb.lb-internal-spoke.frontend_ip_configuration[0].private_ip_address}
-    └─ External LB: ${azurerm_public_ip.lb-external-pip.ip_address}
+    └─ External LB: ${azurerm_public_ip.pip-external-lb.ip_address}
   
   🧪 Test external Load Balancer (from your computer):
-  curl http://${azurerm_public_ip.lb-external-pip.ip_address}
+  curl http://${azurerm_public_ip.pip-external-lb.ip_address}
   
-  Or open in browser: http://${azurerm_public_ip.lb-external-pip.ip_address}
+  Or open in browser: http://${azurerm_public_ip.pip-external-lb.ip_address}
   
   🧪 Test internal Load Balancer (from vm-client):
   1. Connect to vm-client via Serial Console or Bastion
