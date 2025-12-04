@@ -34,3 +34,26 @@ terraform.rc
 # OS-specific files
 .DS_Store
 Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDE files
+.vscode/settings.json
+.idea/
+*.iml
+
+# SSH keys (au cas où)
+*.pem
+*.key
+
+# Backup files
+*.backup
+*.bak
+
+# Logs
+*.log
+
+# Exception: Allow .tfvars.example files (templates for students)
+!*.tfvars.example
+!terraform.tfvars.example
