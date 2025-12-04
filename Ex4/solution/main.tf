@@ -66,11 +66,10 @@ resource "azurerm_virtual_network" "vnet-spoke" {
 }
 
 resource "azurerm_subnet" "subnet-spoke-01" {
-  name                            = "subnet-spoke-01"
-  resource_group_name             = azurerm_resource_group.rg-app-01.name
-  virtual_network_name            = azurerm_virtual_network.vnet-spoke.name
-  address_prefixes                = ["10.1.0.0/24"]
-  default_outbound_access_enabled = true
+  name                 = "subnet-spoke-01"
+  resource_group_name  = azurerm_resource_group.rg-app-01.name
+  virtual_network_name = azurerm_virtual_network.vnet-spoke.name
+  address_prefixes     = ["10.1.0.0/24"]
 }
 
 resource "azurerm_linux_virtual_machine" "vm-app-i01" {
@@ -225,8 +224,8 @@ resource "azurerm_lb_rule" "lb-internal-lb-rule" {
 
 // External Load Balancer
 
-resource "azurerm_public_ip" "lb-external-pip" {
-  name                = "lb-external-pip"
+resource "azurerm_public_ip" "pip-external-lb" {
+  name                = "pip-external-lb"
   location            = var.location
   resource_group_name = azurerm_resource_group.rg-app-01.name
   allocation_method   = "Static"
@@ -240,7 +239,7 @@ resource "azurerm_lb" "lb-external-spoke" {
 
   frontend_ip_configuration {
     name                 = "fp-ip"
-    public_ip_address_id = azurerm_public_ip.lb-external-pip.id
+    public_ip_address_id = azurerm_public_ip.pip-external-lb.id
   }
 
   depends_on = [
@@ -327,29 +326,75 @@ resource "azurerm_network_security_group" "nsg-spoke-01" {
   resource_group_name = azurerm_resource_group.rg-app-01.name
 }
 
-resource "azurerm_network_security_rule" "allow-internet" {
-  name                        = "allow-internet"
-  priority                    = 110
-  direction                   = "Outbound"
-  access                      = "Allow"
+// Inbound
+
+resource "azurerm_network_security_rule" "allow-http" {
+  name                                       = "allow-http"
+  priority                                   = 110
+  direction                                  = "Inbound"
+  access                                     = "Allow"
+  protocol                                   = "Tcp"
+  source_port_range                          = "*"
+  destination_port_range                     = "80"
+  source_address_prefix                      = "Internet"
+  destination_application_security_group_ids = [azurerm_application_security_group.asg-spoke-01.id]
+  resource_group_name                        = azurerm_resource_group.rg-app-01.name
+  network_security_group_name                = azurerm_network_security_group.nsg-spoke-01.name
+}
+
+resource "azurerm_network_security_rule" "allow-http-from-hub" {
+  name                                       = "allow-http-from-hub"
+  priority                                   = 115
+  direction                                  = "Inbound"
+  access                                     = "Allow"
+  protocol                                   = "Tcp"
+  source_port_range                          = "*"
+  destination_port_range                     = "80"
+  source_address_prefix                      = "10.0.0.0/16"
+  destination_application_security_group_ids = [azurerm_application_security_group.asg-spoke-01.id]
+  resource_group_name                        = azurerm_resource_group.rg-app-01.name
+  network_security_group_name                = azurerm_network_security_group.nsg-spoke-01.name
+}
+
+resource "azurerm_network_security_rule" "D-IN-Any" {
+  name                        = "D-IN-Any"
+  priority                    = 4096
+  direction                   = "Inbound"
+  access                      = "Deny"
   protocol                    = "*"
   source_port_range           = "*"
   destination_port_range      = "*"
   source_address_prefix       = "*"
-  destination_address_prefix  = "Internet"
+  destination_address_prefix  = "*"
   resource_group_name         = azurerm_resource_group.rg-app-01.name
   network_security_group_name = azurerm_network_security_group.nsg-spoke-01.name
 }
 
-resource "azurerm_network_security_rule" "allow-http" {
-  name                        = "allow-http"
-  priority                    = 100
-  direction                   = "Inbound"
-  access                      = "Allow"
-  protocol                    = "Tcp"
+// Outbound
+
+resource "azurerm_network_security_rule" "allow-internet" {
+  name                                  = "allow-internet"
+  priority                              = 110
+  direction                             = "Outbound"
+  access                                = "Allow"
+  protocol                              = "*"
+  source_port_range                     = "*"
+  destination_port_range                = "*"
+  source_application_security_group_ids = [azurerm_application_security_group.asg-spoke-01.id]
+  destination_address_prefix            = "Internet"
+  resource_group_name                   = azurerm_resource_group.rg-app-01.name
+  network_security_group_name           = azurerm_network_security_group.nsg-spoke-01.name
+}
+
+resource "azurerm_network_security_rule" "D-OU-Any" {
+  name                        = "D-OU-Any"
+  priority                    = 4096
+  direction                   = "Outbound"
+  access                      = "Deny"
+  protocol                    = "*"
   source_port_range           = "*"
-  destination_port_range      = "80"
-  source_address_prefix       = "Internet"
+  destination_port_range      = "*"
+  source_address_prefix       = "*"
   destination_address_prefix  = "*"
   resource_group_name         = azurerm_resource_group.rg-app-01.name
   network_security_group_name = azurerm_network_security_group.nsg-spoke-01.name
@@ -360,31 +405,3 @@ resource "azurerm_subnet_network_security_group_association" "nsg-subnet-associa
   network_security_group_id = azurerm_network_security_group.nsg-spoke-01.id
 }
 
-// NAT Gateway
-
-resource "azurerm_nat_gateway" "nat-gateway-01" {
-  name                    = "nat-gateway-01"
-  location                = var.location
-  resource_group_name     = azurerm_resource_group.rg-app-01.name
-  idle_timeout_in_minutes = 10
-  zones                   = ["1"]
-}
-
-resource "azurerm_subnet_nat_gateway_association" "nat-gateway-subnet-association-01" {
-  subnet_id      = azurerm_subnet.subnet-spoke-01.id
-  nat_gateway_id = azurerm_nat_gateway.nat-gateway-01.id
-}
-
-resource "azurerm_public_ip" "pip-spoke-01" {
-  name                = "pip-spoke-01"
-  location            = var.location
-  resource_group_name = azurerm_resource_group.rg-app-01.name
-  allocation_method   = "Static"
-  sku                 = "Standard"
-  zones               = ["1"]
-}
-
-resource "azurerm_nat_gateway_public_ip_association" "nat-gateway-pip-association-01" {
-  nat_gateway_id       = azurerm_nat_gateway.nat-gateway-01.id
-  public_ip_address_id = azurerm_public_ip.pip-spoke-01.id
-}
